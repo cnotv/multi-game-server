@@ -34,6 +34,6 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(3000, () => {
-  console.log('Server ready');
+httpServer.listen(3000, '0.0.0.0', () => {
+  console.log('Server ready at port 3000');
 });
