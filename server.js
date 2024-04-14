@@ -1,10 +1,27 @@
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
+const express = require('express');
+const { createServer } = require('http');
+const cors = require('cors');
 
-const io = new Server({ /* options */ });
+const app = express();
+app.use(cors());
 
-io.on("connection", (socket) => {
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+  // res.send('<h1>Worker up</h1>');
+});
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, { 
+  cors: {
+    origin: ['https://cnotv-multi-game.netlify.app/', 'http://localhost:4000/'],
+    methods: ['GET', 'POST'],
+  },
+ });
+
+io.on('connection', (socket) => {
   const count = io.engine.clientsCount;
-  const uuid = require("uuid");
+  const uuid = require('uuid');
 
   io.engine.generateId = (req) => {
     return uuid.v4(); // must be unique across all Socket.IO servers
@@ -12,10 +29,11 @@ io.on("connection", (socket) => {
 
   console.log(`New connection: ${socket.id} - Total clients: ${count}`);
 
-  io.engine.on("connection_error", (err) => {
+  io.engine.on('connection_error', (err) => {
     console.log(err);
   });
 });
 
-  
-io.listen(3000);
+httpServer.listen(3000, () => {
+  console.log('Server ready');
+});
