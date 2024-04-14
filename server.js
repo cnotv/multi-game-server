@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const express = require('express');
 const { createServer } = require('http');
 const cors = require('cors');
+const uuid = require('uuid');
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,7 @@ app.get('/', (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer, { 
   cors: {
+    // origin: '*',
     origin: ['https://cnotv-multi-game.netlify.app/', 'http://localhost:4000/'],
     methods: ['GET', 'POST'],
   },
@@ -21,7 +23,6 @@ const io = new Server(httpServer, {
 
 io.on('connection', (socket) => {
   const count = io.engine.clientsCount;
-  const uuid = require('uuid');
 
   io.engine.generateId = (req) => {
     return uuid.v4(); // must be unique across all Socket.IO servers
@@ -30,7 +31,7 @@ io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id} - Total clients: ${count}`);
 
   io.engine.on('connection_error', (err) => {
-    console.log(err);
+    console.log(err.message);
   });
 });
 
