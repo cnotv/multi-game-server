@@ -15,9 +15,9 @@ app.get('/', (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer, { 
   cors: {
-    // origin: '*',
-    origin: ['https://cnotv-multi-game.netlify.app/', 'http://localhost:4000/'],
-    methods: ['GET', 'POST'],
+    origin: '*',
+    // origin: ['https://cnotv-multi-game.netlify.app/', 'http://localhost:4000/'],
+    // methods: ['GET', 'POST'],
   },
 });
  
