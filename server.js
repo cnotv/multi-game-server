@@ -31,43 +31,52 @@ io.on('connection', (socket) => {
     return uuid.v4(); // must be unique across all Socket.IO servers
   }
 
-  console.log(`New connection: ${socket.id} - Total clients: ${count}`);
+  console.log(`New connection: ${socket.id} - Total clients: ${count} - Total users: ${users.length}`);
 
-
+  // USERS
   socket.on('user:create', (user) => {
     console.log('user:create', user);
+    user = {
+      ...user,
+      id: socket.id
+    }
     users.push(user);
-    io.emit('user:created', users);
+    io.emit('user:created', user);
   });
   
+  // Filter user by ID
   socket.on('user:change', (user) => {
-    console.log('user:change', user);
     users = [
-      ...users.filter(u => u.id !== user.id),
+      ...users
+        .filter(u => !u.id)
+        .filter(u => u.id !== user.id),
       user
     ];
-    io.emit('user:created', users);
+    console.log('user:change', user);
+    io.emit('user:changed', users);
   });
 
-  socket.on('user:created', (user) => {
-    console.log('user:created', user);
-  });
-
+  // MESSAGES
   socket.on('message:create', (message) => {
     console.log('message:create', message);
     messages.push(message);
     io.emit('message:created', message);
   });
 
-  socket.on('message:created', (message) => {
-    console.log('message:created', message);
-  });
-
-
+  // ERROR HANDLING
   io.engine.on('connection_error', (err) => {
     console.log(err.message);
   });
+
+  // DISCONNECTION
+  // Remove user on disconnection using token
+  socket.on("disconnect", () => {
+    console.log(socket.id); // undefined
+    users = users.filter(user => user.id !== socket.id);
+    io.emit('user:changed', users);
+  });
 });
+
 
 httpServer.listen(3000, '0.0.0.0', () => {
   console.log('Server ready at port 3000');
