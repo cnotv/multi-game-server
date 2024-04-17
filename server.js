@@ -34,26 +34,27 @@ io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id} - Total clients: ${count} - Total users: ${users.length}`);
 
   // USERS
-  socket.on('user:create', (user) => {
+  socket.on('user:create', (user, callback) => {
     console.log('user:create', user);
     user = {
       ...user,
       id: socket.id
     }
     users.push(user);
-    io.emit('user:created', user);
+    io.emit('user:list', users);
+    callback(user);
   });
   
   // Filter user by ID
   socket.on('user:change', (user) => {
+    console.log('user:change', user);
     users = [
       ...users
-        .filter(u => !u.id)
+        .filter(u => !!u.id)
         .filter(u => u.id !== user.id),
       user
     ];
-    console.log('user:change', user);
-    io.emit('user:changed', users);
+    io.emit('user:list', users);
   });
 
   // MESSAGES
@@ -70,10 +71,10 @@ io.on('connection', (socket) => {
 
   // DISCONNECTION
   // Remove user on disconnection using token
-  socket.on("disconnect", () => {
-    console.log(socket.id); // undefined
+  socket.on("disconnect", (reason) => {
+    console.log(`disconnect ${socket.id} due to ${reason}`);
     users = users.filter(user => user.id !== socket.id);
-    io.emit('user:changed', users);
+    io.emit('user:list', users);
   });
 });
 
