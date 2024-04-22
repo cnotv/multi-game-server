@@ -31,30 +31,34 @@ io.on('connection', (socket) => {
     return uuid.v4(); // must be unique across all Socket.IO servers
   }
 
-  console.log(`New connection: ${socket.id} - Total clients: ${count} - Total users: ${users.length}`);
+  console.log(`New connection: ${socket.id} - Total clients: ${count}`);
 
   // USERS
   socket.on('user:create', (user, callback) => {
-    console.log('user:create', user);
-    user = {
+    const newUser = {
       ...user,
       id: socket.id
     }
-    users.push(user);
-    io.emit('user:list', users);
-    callback(user);
+    users = [
+      ...users.filter(u => u.id !== user.id),
+      newUser
+    ].sort((a, b) => a.name - b.name);
+    console.log('user:create', [newUser.name, newUser.id], `Total users: ${users.length}`);
+    io.emit('user:list', {users, id: newUser.id});
+    callback(newUser);
   });
   
   // Filter user by ID
   socket.on('user:change', (user) => {
-    console.log('user:change', user);
     users = [
       ...users
         .filter(u => !!u.id)
-        .filter(u => u.id !== user.id),
+        .filter(u => u.id !== user.id)
+        .sort((a, b) => a.name - b.name),
       user
     ];
-    io.emit('user:list', users);
+    // console.log('user:change', 'users', users.map(u => u.id));
+    io.emit('user:list', {users, id: user.id});
   });
 
   // MESSAGES
@@ -72,9 +76,9 @@ io.on('connection', (socket) => {
   // DISCONNECTION
   // Remove user on disconnection using token
   socket.on("disconnect", (reason) => {
-    console.log(`disconnect ${socket.id} due to ${reason}`);
-    users = users.filter(user => user.id !== socket.id);
-    io.emit('user:list', users);
+    users = users.filter(user => user.id !== socket.id).sort((a, b) => a.name - b.name);
+    console.log('disconnect', [socket.id, reason]);
+    io.emit('user:list', {users, id: socket.id});
   });
 });
 
