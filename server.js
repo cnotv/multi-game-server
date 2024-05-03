@@ -39,13 +39,14 @@ io.on('connection', (socket) => {
       ...user,
       id: socket.id
     }
+    callback(newUser);
     users = [
       ...users.filter(u => u.id !== user.id),
+      ...users.filter(u => !Object.keys(io.sockets.sockets).includes(u.id)),
       newUser
     ].sort((a, b) => a.name - b.name);
     console.log('user:create', [newUser.name, newUser.id], `Total users: ${users.length}`);
     io.emit('user:list', {users, id: newUser.id});
-    callback(newUser);
   });
   
   // Filter user by ID
